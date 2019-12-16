@@ -6,8 +6,6 @@ import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column, Integer, String
 
-import QuoteItem
-
 # --- Custom Object --- #
 
 def getTypes(parseOutput):
@@ -43,7 +41,7 @@ class Library:
         # Creating a Base Class
         class TempClassName(self.base):
             __tablename__ = tablename
-            id = Column(String, primary_key=True)      
+            id = Column(String, primary_key=True)
 
         # Changing the temp name to the actual name
         table = TempClassName
@@ -53,7 +51,7 @@ class Library:
             setattr(table, key, Column(String)) # Temp
 
         # def toString(self):
-        #         return "<{}(id={}, name='{}'>".format(name,self.id, self.get_name())     
+        #         return "<{}(id={}, name='{}'>".format(name,self.id, self.get_name())
 
         self.tables[name] = table
 
@@ -69,7 +67,7 @@ class Library:
         assert isinstance(item, scrapy.Item)
         Session = sessionmaker(bind=self.engine)
         session = Session()
-        # data = table() 
+        # data = table()
         data = self.tables[table]()
         for key, val in item.items():
             # print('Key:',key,'Value:',val)
