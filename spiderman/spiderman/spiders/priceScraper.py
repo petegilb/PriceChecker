@@ -1,7 +1,7 @@
 import scrapy
 
 class priceScraper(scrapy.Spider):
-    name = 'example'
+    name = 'price'
     allowed_domains = ['amazon.com']
     start_urls = ['']
 
