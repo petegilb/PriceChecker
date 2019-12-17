@@ -4,9 +4,10 @@
 import scrapy
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
+# from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
 
-import QuoteItem
+# import QuoteItem
 
 # --- Custom Object --- #
 
@@ -43,7 +44,13 @@ class Library:
         # Creating a Base Class
         class TempClassName(self.base):
             __tablename__ = tablename
-            id = Column(String, primary_key=True)      
+            id = Column(Integer, primary_key=True)      
+
+            def __repr__(self):
+                fields = [key for key in getColumns(self) if key != 'id']
+                formatStr = "<{}(" + ','.join([key + '={}' for key in fields]) + ")>"
+                formatArgs = [name] + [getattr(self, key) for key in fields] # name == self.__name__
+                return formatStr.format(*formatArgs)
 
         # Changing the temp name to the actual name
         table = TempClassName
@@ -52,10 +59,29 @@ class Library:
         for key, val in fields.items():
             setattr(table, key, Column(String)) # Temp
 
-        # def toString(self):
-        #         return "<{}(id={}, name='{}'>".format(name,self.id, self.get_name())     
+        # formatStr = "<{}(" + ','.join([key + '={}' for key in getColumns(table)]) + ")>"
+        # formatArgs = [name] + [getattr(table, key) for key in getColumns(table)]
+                
+        # print('Format Strings:',formatStr)
+        # print('Format Arguments:',formatArgs)
+        # print('ID:',table.id)
+        # print(formatStr.format(*formatArgs))
 
-        self.tables[name] = table
+        # def toString(self):
+        #     formatStr = "<{}(" + ','.join([key + '={}' for key in getColumns(table)]) + ")>"
+        #     formatArgs = [name] + [getattr(self, key) for key in getColumns(table)] # name == table.__tablename__
+        #     return formatStr.format(*formatArgs)
+
+        # table.__repr__ = toString
+
+        # --- Tests --- #
+
+        # temp = TempClassName()
+        # print('Temp Table:',temp)
+
+        # ------------- #
+
+        self.tables[tablename] = table
 
         # Return this new class
         return table
@@ -64,17 +90,26 @@ class Library:
     def add_table(self, table):
         self.tables[table.__tablename__] = table
 
-    # Scrapy.Item as an argument
-    def insertItem(self, table, item):
+    # Scrapy.Item and sqlalchemy class as arguments
+    def insertItem(self, tableClass, item):
         assert isinstance(item, scrapy.Item)
         Session = sessionmaker(bind=self.engine)
         session = Session()
-        # data = table() 
-        data = self.tables[table]()
+        table = tableClass() 
+        print(tableClass)
+        # table = self.tables[table]()
         for key, val in item.items():
             # print('Key:',key,'Value:',val)
-            # data[key] = val
-            print(data)
+            # data[key] = val # Doesn't Work
+            setattr(table, key, val)
+            
+        print('Table:',table)
+        print(getColumns(table))
+        session.add(table)
+
+        # print(tableClass)
+        # results = session.query(tableClass).all()
+        # print(results)
 
         session.commit()
 
