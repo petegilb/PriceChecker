@@ -1,9 +1,11 @@
 import scrapy
 
-class priceScraper(scrapy.Spider):
+class AmazonScraper(scrapy.Spider):
     name = 'price'
     allowed_domains = ['amazon.com']
-    start_urls = ['']
+    start_urls = [
+        'https://www.amazon.com/'
+    ]
 
     def parse(self, response):
         pass

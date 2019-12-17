@@ -7,13 +7,25 @@ import subprocess #this is for running the code
 import scrapealchemy
 from scrapealchemy import Library
 import json
+import os.path
 #this is gonna be the file where you can use/class and fuse both scrapy and sqlalchemy
 
-def fuse():
-    #creates a json file called data.json that is the output of the information we scraped
-    #return_code = subprocess.call("scrapy crawl quotes -o data.json",shell=True)
+def fuse(scraperName, outputFileName='data.json', outputFilePath=os.path.join(os.path.abspath(__file__),'data.json')):
+    #creates a json file called data.json that is the output of the information we scraped 
+    # return_code = subprocess.call("scrapy crawl quotes -o data.json",shell=True)   
     #ourLibrary.create_table() #create the table and then
-    with open('data.json') as x:
+
+    print('Inputs:',scraperName,',',outputFileName,',',outputFilePath)
+
+    cmdInput = 'scrapy crawl ' + scraperName + ' -o ' + outputFileName
+
+    if os.path.isfile(outputFileName):
+        print ("File exist")
+    else:
+        print ("File not exist")
+        return_code = subprocess.call(cmdInput,shell=True)
+
+    with open(outputFileName) as x:
         data = json.load(x)
 
     test_data = [
@@ -52,4 +64,4 @@ def fuse():
 
 
 
-fuse()
+fuse('amazon',outputFileName='amazon_prices.json')
