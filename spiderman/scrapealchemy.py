@@ -5,7 +5,7 @@ import scrapy
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 # from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Float, Sequence
 
 # import QuoteItem
 
@@ -13,11 +13,35 @@ from sqlalchemy import Column, Integer, String
 
 def getTypes(parseOutput):
     fields = {}
-    for key, val in parseOutput.items():
-        valType = String # Default
-        # TODO - Code that checks the value and ascertains the type
+    for key, val in parseOutput.items():    
+        valType = getType(key, val)    
+        # TODO - Code that checks the value and ascertains the type        
         fields[key] = valType
     return fields
+
+def getType(key, val):
+    valType = String # Default
+    if isinstance(val, str):
+        print('String')
+        valType = String
+    elif isinstance(val, int):
+        print('Integer')
+        valType = Integer
+    elif isinstance(val, float):
+        print('Float')
+        valType = Float
+    elif isinstance(val, list):
+        print('Sequence')
+        if len(val) > 0:
+            # valType = [getType(key,val[0]),Sequence(key)] # Not Supporting Sequences
+            valType = String
+        else:
+            print('Can\'t infer type for Sequence! Assuming sqlalchemy.String!')
+            # valType = [String,Sequence] # Not Supporting Sequences
+            valType = String
+    else:
+        print('Can\'t infer type! Assuming sqlalchemy.String!')
+    return valType
 
 def getColumns(table):
     # columns = [key for key,val in table.__dict__.items() if not key.startswith('_')]
@@ -41,10 +65,10 @@ class Library:
 
         tablename = name.lower() + 's'
 
-        # Creating a Base Class
+        # Creating a Base Class - (Doesn't Support Sequences)
         class TempClassName(self.base):
             __tablename__ = tablename
-            id = Column(Integer, primary_key=True)      
+            id = Column(Integer, primary_key=True)            
 
             def __repr__(self):
                 fields = [key for key in getColumns(self) if key != 'id']
@@ -57,7 +81,10 @@ class Library:
         table.__name__ = name
 
         for key, val in fields.items():
-            setattr(table, key, Column(String)) # Temp
+            if isinstance(val, list):
+                setattr(table, key, Column(*val))
+            else:
+                setattr(table, key, Column(val))
 
         # formatStr = "<{}(" + ','.join([key + '={}' for key in getColumns(table)]) + ")>"
         # formatArgs = [name] + [getattr(table, key) for key in getColumns(table)]
@@ -90,18 +117,35 @@ class Library:
     def add_table(self, table):
         self.tables[table.__tablename__] = table
 
+    def insert(self, tableClass, obj):
+        if isinstance(obj, scrapy.Item):
+            self.insertItem(tableClass, obj)
+        elif isinstance(obj, dict):
+            self.insertDict(tableClass, obj)
+        else:
+            print('Couldn\'t Insert Object:',obj,'.\nIt was not a valid type!')
+
     # Scrapy.Item and sqlalchemy class as arguments
     def insertItem(self, tableClass, item):
         assert isinstance(item, scrapy.Item)
+        dictionary = item.items()
+        self.insertDict(tableClass, dictionary)
+
+    # Scrapy.Item and sqlalchemy class as arguments
+    def insertDict(self, tableClass, obj):
+        assert isinstance(obj, dict)
         Session = sessionmaker(bind=self.engine)
         session = Session()
         table = tableClass() 
         print(tableClass)
         # table = self.tables[table]()
-        for key, val in item.items():
+        for key, val in obj.items():
             # print('Key:',key,'Value:',val)
             # data[key] = val # Doesn't Work
-            setattr(table, key, val)
+            if isinstance(val, list):
+                setattr(table, key, ','.join(val))
+            else:
+                setattr(table, key, val)
             
         print('Table:',table)
         print(getColumns(table))
@@ -112,7 +156,6 @@ class Library:
         # print(results)
 
         session.commit()
-
 
     # Multiple arguments
     # def insertItem(*item):
