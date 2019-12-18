@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import scrapy
-
+# import sys
+# reload(sys)
+# sys.setdefaultencoding('utf-8')
 
 class AmazonSpider(scrapy.Spider):
     name = 'amazon'
@@ -9,7 +11,7 @@ class AmazonSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
-        for item in response.css('div.s-result-item'):            
+        for item in response.css('div.s-result-item'):
             yield {
                 'name': item.css('h2 span::text').extract(),
                 'img': item.css('img.s-image::attr(src)').extract(),

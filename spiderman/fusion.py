@@ -8,11 +8,14 @@ import scrapealchemy
 from scrapealchemy import Library
 import json
 import os.path
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 #this is gonna be the file where you can use/class and fuse both scrapy and sqlalchemy
 
 def fuse(scraperName, outputFileName='data.json', outputFilePath=os.path.join(os.path.abspath(__file__),'data.json')):
-    #creates a json file called data.json that is the output of the information we scraped 
-    # return_code = subprocess.call("scrapy crawl quotes -o data.json",shell=True)   
+    #creates a json file called data.json that is the output of the information we scraped
+    # return_code = subprocess.call("scrapy crawl quotes -o data.json",shell=True)
     #ourLibrary.create_table() #create the table and then
 
     print('Inputs:',scraperName,',',outputFileName,',',outputFilePath)
@@ -44,7 +47,7 @@ def fuse(scraperName, outputFileName='data.json', outputFilePath=os.path.join(os
     test = library.create_table(greatLibrary, 'test', types)
     greatLibrary.create_all_tables()
     #generated all of the tables for the data
-    #as of now the user has to create their own scrapy spider to scrape the website but it should automatically be placed into a table        
+    #as of now the user has to create their own scrapy spider to scrape the website but it should automatically be placed into a table
 
     # Inserting Into Table
     for datum in data:
@@ -65,3 +68,4 @@ def fuse(scraperName, outputFileName='data.json', outputFilePath=os.path.join(os
 
 
 fuse('amazon',outputFileName='amazon_prices.json')
+# fuse('quotes',outputFileName='data.json')
